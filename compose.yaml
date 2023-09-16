@@ -1,0 +1,35 @@
+version: '3.11.4'
+
+services:
+  stats_service:
+    build: .
+    volumes:
+      - .:/stats_service
+    ports:
+      - '8090:8090'
+
+  dynamodb:
+    image: localstack/localstack
+    environment:
+      - SERVICES=dynamodb
+      - DEBUG=1
+      - TEST_AWS_ACCOUNT_ID=000000000000
+      - AWS_DEFAULT_REGION=us-west-2
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - PERSISTENCE=1
+    volumes:
+      - localstack-data:/tmp/localstack/data
+      - "$PWD/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh"
+      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    ports:
+      - '4566:4566'
+
+volumes:
+  localstack-data:
+    driver: local
+
+networks:
+  default:
+    external:
+      name: main_network
