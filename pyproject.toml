@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "stats-servise"
+version = "0.1.0"
+description = ""
+authors = ["Dmitriy Mushtruk <dima.mushtruk@gmail.com>"]
+readme = "README.md"
+packages = [{include = "stats_servise"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.103.1"
+uvicorn = "^0.23.2"
+pynamodb = "^5.5.0"
+pydantic-settings = "^2.0.3"
+boto3 = "^1.28.48"
+localstack-client = "^2.3"
+pika = "^1.3.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
