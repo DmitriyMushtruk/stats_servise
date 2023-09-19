@@ -1,89 +1,42 @@
 import boto3
 from fastapi import FastAPI, HTTPException
 from pynamodb.connection import Connection
+from app.config import settings
 
-
-from app.database import create_page_table
-from pynamodb.exceptions import TableError
-
-# Написать логику добавления записей в таблицу
-# Настроить логику изменения атрибутов followers likes и тд.
-# Соответсвенно добавлять записи если страница создалась и удалять если страница удалилась
-#
-# ...
 
 dynamodb = boto3.resource('dynamodb',
-                          region_name='us-east-1',
-                          endpoint_url='http://dynamodb:4566',
-                          aws_access_key_id='dummy12121',
-                          aws_secret_access_key='dummy12121')
+                          region_name=settings.REGION_NAME,
+                          endpoint_url=settings.ENDPOINT_URL,
+                          aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                          aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
 
 connection = Connection(dynamodb)
 
 app = FastAPI()
 
-# create_page_table()
-#
-# table_name = 'Pages'
-# table = dynamodb.Table(table_name)
-#
-# if table.table_status == 'ACTIVE':
-#     print(f"Таблица '{table_name}' успешно создана.")
-# else:
-#     print("Не удалось создать таблицу.")
-#
-#
-# table.put_item(
-#     Item={
-#         'page_id': 1,
-#         'page_name': 'ExamplePage',
-#         'followers': 1000,
-#         'likes': 500,
-#         'posts': 50,
-#         'reposts': 20,
-#         'comments': 100
-#     }
-# )
+table_names = dynamodb.meta.client.list_tables()['TableNames']
 
+print(f"Number of tables found: {len(table_names)}")
 
-table_name = 'Pages'
-table = dynamodb.Table(table_name)
-
-response = table.get_item(
-    Key={
-        'page_id': 1,
-        'page_name': 'ExamplePage'
-    }
-)
-
-item = response['Item']
-print(item)
+for table_name in table_names:
+    print(f"Table Name: {table_name}")
 
 
 @app.get("/stats/")
-async def get_page_stats(page_id: int, page_name: str):
+async def get_page_stats(page_id: int):
     try:
+        table = dynamodb.Table('Pages')
         response = table.get_item(
             Key={
                 'page_id': page_id,
-                'page_name': page_name
             }
         )
 
         if 'Item' in response:
             item = response['Item']
-            return item  # Верните запись в виде JSON-ответа
+            return item
         else:
             raise HTTPException(status_code=404, detail="Page not found.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred while retrieving data: {str(e)}")
 
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-
-@app.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
